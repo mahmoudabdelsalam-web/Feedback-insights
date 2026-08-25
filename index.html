@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Training FM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       CSS CUSTOM PROPERTIES
+    ============================================================ */
+    :root {
+      --bg:          #0d0d0d;
+      --bg-card:     #141414;
+      --bg-raised:   #1a1a1a;
+      --border:      rgba(255,255,255,0.07);
+      --gold:        #0073ff;
+      --gold-dim:    rgba(201,168,76,0.15);
+      --gold-bright: #0073ff;
+      --text:        #0073ff;
+      --text-muted:  #afaca5;
+      --text-mid:    #99958f;
+      --white:       #ffffff;
+      --ff-display:  'Playfair Display', Georgia, serif;
+      --ff-body:     'DM Sans', sans-serif;
+      --ff-mono:     'DM Mono', monospace;
+      --radius:      4px;
+      --transition:  0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--ff-body);
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+      cursor: default;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+    ul { list-style: none; }
+
+    /* ============================================================
+       NOISE TEXTURE OVERLAY
+    ============================================================ */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.45;
+    }
+
+    /* ============================================================
+       SCROLLBAR
+    ============================================================ */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+
+    /* ============================================================
+       NAV
+    ============================================================ */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 5vw;
+      background: rgba(13,13,13,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
+    }
+    .nav-logo {
+      font-family: var(--ff-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+    }
+    .nav-links a {
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      transition: color var(--transition);
+    }
+    .nav-links a:hover { color: var(--gold); }
+
+    /* Hamburger */
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .nav-toggle span {
+      display: block;
+      width: 22px;
+      height: 1.5px;
+      background: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 8rem 5vw 5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative grid lines */
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+      pointer-events: none;
+    }
+
+    /* Gold glow blob */
+    #hero::after {
+      content: '';
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+      top: -100px; right: -100px;
+      pointer-events: none;
+      animation: pulse 6s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.1); opacity: 0.7; }
+    }
+
+    .hero-inner {
+      max-width: 900px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--ff-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 40px; height: 1px;
+      background: var(--gold);
+    }
+
+    .hero-name {
+      font-family: var(--ff-display);
+      font-size: clamp(3rem, 9vw, 7.5rem);
+      font-weight: 900;
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+      color: var(--white);
+      margin-bottom: 1.2rem;
+    }
+    .hero-name em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .hero-role {
+      font-size: 1.05rem;
+      font-weight: 300;
+      color: var(--text-mid);
+      max-width: 520px;
+      margin-bottom: 3rem;
+      line-height: 1.6;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 2rem;
+      background: var(--gold);
+      color: #0d0d0d;
+      font-family: var(--ff-body);
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      border-radius: var(--radius);
+    }
+    .btn-primary:hover {
+      background: var(--gold-bright);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(201,168,76,0.3);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 2rem;
+      background: transparent;
+      color: var(--text-mid);
+      font-family: var(--ff-body);
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: var(--transition);
+      border-radius: var(--radius);
+    }
+    .btn-secondary:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      transform: translateY(-2px);
+    }
+
+    .hero-scroll {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 5vw;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-family: var(--ff-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      animation: float 3s ease-in-out infinite;
+    }
+    .hero-scroll::before {
+      content: '';
+      display: block;
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, transparent, var(--text-muted));
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(6px); }
+    }
+
+    /* ============================================================
+       SECTION SHARED
+    ============================================================ */
+    section {
+      padding: 7rem 5vw;
+    }
+    .section-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .section-header {
+      display: flex;
+      align-items: column;
+      gap: 40px;
+      margin-bottom: 4rem;
+    }
+    .section-label {
+      font-family: var(--ff-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      white-space: nowrap;
+    }
+    .section-title {
+      font-family: var(--ff-display);
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.1;
+    }
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ============================================================
+       OBJECTIFS
+    ============================================================ */
+    #about {
+  background: var(--bg);
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 50% / 50% */
+  gap: 2rem;
+  align-items: stretch;
+}
+.about-visual {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-gif {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.about-intro p {
+  color: var(--text-mid);
+  font-size: 1.05rem;
+  line-height: 1.85;
+  margin-bottom: 1.2rem;
+}
+
+.about-intro p strong {
+  color: #1553C7;
+}
+
+.about-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* --- CARDS --- */
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 1.75rem 1.5rem;
+  border-radius: var(--radius);
+  transition: var(--transition);
+
+  /* Animation flottante */
+  animation: floatRandom 6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  will-change: transform;
+}
+
+.stat-card:hover {
+  border-color: rgba(201,168,76,0.3);
+  transform: translateY(-3px) scale(1.01);
+}
+
+/* --- VARIATIONS POUR EFFET ALEATOIRE --- */
+.stat-card:nth-child(1) {
+  animation-duration: 5s;
+}
+
+.stat-card:nth-child(2) {
+  animation-duration: 7s;
+  animation-delay: 1s;
+}
+
+.stat-card:nth-child(3) {
+  animation-duration: 6.5s;
+  animation-delay: 2s;
+}
+
+.stat-card:nth-child(4) {
+  animation-duration: 8s;
+  animation-delay: 0.5s;
+}
+
+/* --- ANIMATION --- */
+@keyframes floatRandom {
+  0%   { transform: translate(0px, 0px); }
+  20%  { transform: translate(2px, -6px); }
+  40%  { transform: translate(-3px, -10px); }
+  60%  { transform: translate(3px, -5px); }
+  80%  { transform: translate(-2px, -8px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+/* --- TEXTES --- */
+.stat-number {
+  font-family: var(--ff-display);
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 0.4rem;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+.about-visual {
+  margin-top: 2rem;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-gif {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius);
+  display: block;
+}
+    /* ============================================================
+       Ici, vous découvrez
+    ============================================================ */
+    #experience { background: var(--bg-card); }
+    .timeline {
+      position: relative;
+      padding-left: 2rem;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 8px; bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 3.5rem;
+      padding-left: 2.5rem;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -2rem;
+      top: 8px;
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 3px var(--bg-card), 0 0 0 5px rgba(201,168,76,0.2);
+    }
+    .timeline-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .timeline-date {
+      font-family: var(--ff-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+      background: var(--gold-dim);
+      padding: 0.2rem 0.65rem;
+      border-radius: 2px;
+    }
+    .timeline-type {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .timeline-title {
+      font-family: var(--ff-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 0.2rem;
+    }
+    .timeline-org {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .timeline-body {
+      color: var(--text-mid);
+      font-size: 0.92rem;
+      line-height: 1.75;
+    }
+    .timeline-body li {
+      position: relative;
+      padding-left: 1.2rem;
+      margin-bottom: 0.4rem;
+    }
+    .timeline-body li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--gold);
+      font-size: 0.75rem;
+    }
+
+    /* ============================================================
+       Démonstration (fusion "détails" + "démo")
+    ============================================================ */
+    #projects { background: var(--bg); }
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .project-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+    .project-card:hover {
+      border-color: rgba(201,168,76,0.35);
+      transform: translateY(-5px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .project-img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--bg-raised);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .project-img-placeholder {
+      font-family: var(--ff-display);
+      font-size: 4rem;
+      opacity: 0.12;
+      color: var(--gold);
+      user-select: none;
+    }
+    .project-img-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(201,168,76,0.04) 0%, transparent 60%);
+    }
+    .project-body {
+      padding: 1.75rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .project-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .project-tag {
+      font-family: var(--ff-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: var(--gold-dim);
+      padding: 0.25rem 0.6rem;
+      border-radius: 2px;
+    }
+    .project-title {
+      font-family: var(--ff-display);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 0.75rem;
+    }
+    .project-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      flex: 1;
+    }
+    .project-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    .project-link {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: color var(--transition);
+    }
+    .project-link:hover { color: var(--gold); }
+    .project-link svg { width: 8px; height: 8px; }
+
+    .steps-container { margin-top: 0.5rem; }
+    .steps-list {
+      color: var(--text-mid);
+      font-size: 0.88rem;
+      line-height: 1.75;
+      padding-left: 1.2rem;
+      list-style: decimal;
+    }
+    .steps-list li { margin-bottom: 0.6rem; }
+    .steps-callout {
+      margin-top: 1.25rem;
+      padding: 1rem 1.25rem;
+      background: var(--gold-dim);
+      border-left: 2px solid var(--gold);
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      color: var(--text-mid);
+    }
+
+    /* ============================================================
+       Démonstration
+    ============================================================ */
+    #skills { background: var(--bg-card); }
+    .skills-wrapper {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 2rem;
+    }
+    .skill-group {
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      transition: var(--transition);
+    }
+    .skill-group:hover { border-color: rgba(201,168,76,0.25); }
+    .skill-group-icon {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .skill-group-title {
+      font-family: var(--ff-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .skill-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .skill-badge {
+      font-family: var(--ff-mono);
+      font-size: 0.72rem;
+      color: var(--text-mid);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 0.35rem 0.75rem;
+      border-radius: 2px;
+      transition: var(--transition);
+      cursor: default;
+    }
+    .skill-badge:hover {
+      color: var(--gold);
+      border-color: rgba(201,168,76,0.4);
+      background: var(--gold-dim);
+    }
+
+    /* Language flags row */
+    .languages-row {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-top: 2.5rem;
+    }
+    .lang-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+    .lang-flag { font-size: 2rem; }
+    .lang-level {
+      font-family: var(--ff-mono);
+      font-size: 0.80rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: var(--gold-dim);
+      padding: 0.15rem 0.5rem;
+      border-radius: 2px;
+    }
+
+    /* ============================================================
+       CONTACT / FOOTER
+    ============================================================ */
+    #contact {
+      background: var(--bg);
+      padding-bottom: 4rem;
+    }
+    .contact-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4rem;
+      display: flex;
+      gap: 4rem;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .contact-card::before {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .contact-left { flex: 1; }
+    .contact-title {
+      font-family: var(--ff-display);
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 0.75rem;
+      line-height: 1.2;
+    }
+    .contact-sub {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      max-width: 400px;
+    }
+    .contact-right {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-width: 240px;
+    }
+    .contact-link {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-mid);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .contact-link:hover {
+      border-color: rgba(201,168,76,0.4);
+      color: var(--gold);
+      transform: translateX(4px);
+    }
+    .contact-link-icon {
+      width: 36px; height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .contact-link-icon svg { width: 15px; height: 15px; fill: var(--gold); }
+
+    .footer-bar {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--ff-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* ============================================================
+       ANIMATIONS (Intersection Observer driven)
+    ============================================================ */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .fade-up:nth-child(2) { transition-delay: 0.1s; }
+    .fade-up:nth-child(3) { transition-delay: 0.2s; }
+    .fade-up:nth-child(4) { transition-delay: 0.3s; }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 900px) {
+      .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .contact-card { flex-direction: column; gap: 2.5rem; padding: 2.5rem; }
+      .contact-right { width: 100%; }
+    }
+    @media (max-width: 700px) {
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100%; left: 0; right: 0;
+        background: rgba(13,13,13,0.97);
+        border-bottom: 1px solid var(--border);
+        padding: 1.5rem 5vw;
+        gap: 1.5rem;
+      }
+      .nav-toggle { display: flex; }
+      #hero { padding-top: 6rem; }
+      .hero-scroll { display: none; }
+      .about-stats { grid-template-columns: 1fr 1fr; }
+      .section-header { flex-wrap: wrap; }
+      .section-line { display: none; }
+      .footer-bar { flex-direction: column; gap: 0.75rem; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      section { padding: 5rem 5vw; }
+      .about-stats { grid-template-columns: 1fr; }
+      .contact-card { padding: 2rem 1.5rem; }
+    }
+
+    .hero-photo-wrap {
+  position: absolute;
+  right: 5vw;
+  top: 50%;
+  transform: translateY(-50%) translateX(40px);
+  opacity: 0;
+  z-index: 1;
+  animation: heroFadeIn 1s ease forwards;
+}
+
+@keyframes heroFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+.hero-photo-frame {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 16px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.hero-logo {
+  width: 160px;
+  object-fit: contain;
+}
+
+.hero-avatar {
+  width: 280px;
+  object-fit: contain;
+}
+
+@keyframes float {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-12px); }
+  100% { transform: translateY(0px); }
+}
+
+.hero-photo-frame::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 2px;
+  pointer-events: none;
+  opacity: 0;
+  animation: frameFade 1.5s ease forwards;
+  animation-delay: 0.5s;
+}
+
+@keyframes frameFade {
+  to { opacity: 1; }
+}
+
+@media (max-width: 1000px) {
+  .hero-photo-wrap {
+    display: none;
+  }
+}
+
+
+    /* Project photo gallery */
+    .project-gallery {
+      width: auto;
+      overflow: hidden;
+      position: relative;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-raised);
+    }
+    .gallery-track {
+      display: flex;
+      transition: transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .gallery-slide {
+      min-width: 100%;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      position: relative;
+    }
+    .gallery-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+      filter: brightness(0.92);
+      transition: filter var(--transition);
+    }
+    .gallery-slide img:hover { filter: brightness(1); }
+    .gallery-controls {
+      position: absolute;
+      bottom: 0.75rem;
+      right: 0.75rem;
+      display: flex;
+      gap: 0.4rem;
+      z-index: 5;
+    }
+    .gallery-btn {
+      width: 28px; height: 28px;
+      background: rgba(13,13,13,0.75);
+      border: 1px solid rgba(201,168,76,0.4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--gold);
+      transition: var(--transition);
+      padding: 0;
+    }
+    .gallery-btn:hover { background: rgba(201,168,76,0.2); }
+    .gallery-btn svg { width: 10px; height: 10px; }
+    .gallery-dots {
+      position: absolute;
+      bottom: 0.75rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 5px;
+    }
+    .gallery-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .gallery-dot.active { background: var(--gold); width: 14px; border-radius: 3px; }
+
+    /* ============================================================
+       ICON VISUAL BLOCKS (remplace les captures d'écran)
+    ============================================================ */
+    .icon-visual {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, #1a1a1a 0%, #141414 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+    .icon-visual-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .icon-visual-row {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+    .icon-circle {
+      width: 40px; height: 40px;
+      border: 1.5px solid rgba(0,115,255,0.5);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-visual-label {
+      font-family: var(--ff-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .icon-arrow {
+      color: var(--gold);
+      opacity: 0.5;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+  ============================================================ -->
+  <nav id="navbar">
+    <span class="nav-logo">Feedback<br>Management</span>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#about">Objectifs</a></li>
+      <li><a href="#experience">Ici, vous découvrez</a></li>
+      <li><a href="#projects">Démonstration</a></li>
+      <li><a href="#contact">Envie d’essayer ?</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- ============================================================
+       HERO
+  ============================================================ -->
+  <section id="hero">
+    <div class="hero-inner">
+      <p class="hero-eyebrow">Formation Interactive</p>
+      <h1 class="hero-name">
+        Transformez vos verbatims <br />
+        en <em>insights actionnables</em>
+      </h1>
+      <p class="hero-role">
+        Découvrez comment AI Feedback Insights transforme vos retours clients en enseignements clairs, structurés et directement exploitables.
+      </p>
+      <div class="hero-ctas">
+        <a href="#contact" class="btn-primary">
+          <!-- Arrow SVG -->
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 7h12M7 1l6 6-6 6" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Get In Touch
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-photo-wrap">
+      <div class="hero-photo-frame">
+        <img src="./logo.png" alt="Logo Skeepers" class="hero-logo" />
+        <img src="./Like.png" alt="Avatar Skeepers" class="hero-avatar" />
+      </div>
+    </div>
+    <div class="hero-scroll">Scroll to explore</div>
+  </section>
+
+  <!-- ============================================================
+       OBJECTIFS
+  ============================================================ -->
+  <section id="about">
+    <div class="section-inner">
+      <div class="section-header">
+        <span class="section-label">01</span>
+        <h2 class="section-title">Objectifs du Live Training</h2>
+        <div class="section-line"></div>
+      </div>
+
+      <!-- Texte intro au-dessus de la grille -->
+      <div class="about-intro fade-up">
+        <p>
+          Vous collectez des verbatims ouverts sur différents canaux (questionnaires post-achat, interactions support, enquêtes en magasin, etc.). Ces retours sont riches, mais souvent difficiles à analyser manuellement.
+          Avec <strong>AI Feedback Insights</strong>, vous les transformez automatiquement en enseignements clairs, structurés et exploitables, grâce à l'intelligence artificielle.
+        </p>
+        <div class="languages-row">
+          <div class="lang-item">
+            <span class="lang-level">Verbatims</span>
+          </div>
+          <div class="lang-item">
+            <span class="lang-level">Analyse IA</span>
+          </div>
+          <div class="lang-item">
+            <span class="lang-level">Insights</span>
+          </div>
+          <div class="lang-item">
+            <span class="lang-level">Actions</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-grid">
+
+        <!-- COLONNE GAUCHE : image/GIF grande -->
+        <div class="about-visual fade-up">
+          <img src="Avatar p.gif" alt="Illustration AI Feedback Insights" class="about-gif" />
+        </div>
+
+        <!-- COLONNE DROITE : 4 cartes -->
+        <div class="about-stats">
+          <div class="stat-card fade-up">
+            <div class="stat-number">Lancer une analyse</div>
+            <div class="stat-label">sur vos verbatims et définir le périmètre à explorer</div>
+          </div>
+          <div class="stat-card fade-up">
+            <div class="stat-number">Décrypter les résultats</div>
+            <div class="stat-label">grâce à la synthèse globale, aux points forts et aux axes d'amélioration</div>
+          </div>
+          <div class="stat-card fade-up">
+            <div class="stat-number">Identifier les opportunités</div>
+            <div class="stat-label">qui peuvent nourrir vos réflexions et plans d'action</div>
+          </div>
+          <div class="stat-card fade-up">
+            <div class="stat-number">Réutiliser vos insights</div>
+            <div class="stat-label">dans vos rapports, présentations ou outils collaboratifs</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Ici, vous découvrez
+  ============================================================ -->
+  <section id="experience">
+    <div class="section-inner">
+      <div class="section-header">
+        <span class="section-label">02</span>
+        <h2 class="section-title">Ici, vous découvrez</h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="timeline">
+
+        <!-- Analyse -->
+        <div class="timeline-item fade-up">
+          <div class="timeline-meta">
+            <span class="timeline-date">Lancer</span>
+            <span class="timeline-type">une analyse</span>
+          </div>
+          <h3 class="timeline-title">Comment analyser vos verbatims avec l'IA ?</h3>
+          <p class="timeline-org">Découvrez comment sélectionner une campagne et une question ouverte, appliquer des filtres, puis lancer une analyse IA en un seul clic.</p>
+        </div>
+
+        <!-- Résultats -->
+        <div class="timeline-item fade-up">
+          <div class="timeline-meta">
+            <span class="timeline-date">Décrypter</span>
+            <span class="timeline-type">les résultats</span>
+          </div>
+          <h3 class="timeline-title">Synthèse globale, points forts et axes d'amélioration</h3>
+          <p class="timeline-org">Apprenez à lire la synthèse générée par l'IA et à distinguer les points forts des irritants récurrents mentionnés par vos clients.</p>
+        </div>
+
+        <!-- Opportunités -->
+        <div class="timeline-item fade-up">
+          <div class="timeline-meta">
+            <span class="timeline-date">Identifier</span>
+          </div>
+          <h3 class="timeline-title">Des opportunités d'amélioration concrètes</h3>
+          <p class="timeline-org">Découvrez les recommandations proposées par l'IA, à valider avec votre expertise métier avant de les intégrer à vos plans d'action.</p>
+        </div>
+
+        <!-- Réutilisation -->
+        <div class="timeline-item fade-up">
+          <div class="timeline-meta">
+            <span class="timeline-date">Réutiliser</span>
+            <span class="timeline-type">vos insights</span>
+          </div>
+          <h3 class="timeline-title">Comment partager vos insights avec vos équipes ?</h3>
+          <p class="timeline-org">Apprenez à copier-coller les résultats de l'analyse dans vos rapports, présentations ou outils collaboratifs.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Démonstration (fusion "Aller plus en détails" + "Démonstration")
+  ============================================================ -->
+  <section id="projects">
+    <div class="section-inner">
+      <div class="section-header">
+        <span class="section-label">03</span>
+        <h2 class="section-title">Démonstration</h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="projects-grid">
+
+        <!-- Card 1: Lancer une analyse -->
+        <div class="project-card fade-up">
+          <div class="icon-visual">
+            <div class="icon-visual-inner">
+              <div class="icon-visual-row">
+                <div class="icon-circle">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8h3l2-5 2 10 2-5h3" stroke="#0073ff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <span class="icon-arrow">→</span>
+                <div class="icon-circle">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#0073ff" stroke-width="1.4"/><path d="M5 8h6M5 5.5h6M5 10.5h4" stroke="#0073ff" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </div>
+              </div>
+              <span class="icon-visual-label">Verbatims → Analyse IA</span>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-tags">
+              <span class="project-tag">Analyse</span>
+              <span class="project-tag">Campagne</span>
+              <span class="project-tag">Filtres</span>
+            </div>
+            <h3 class="project-title">Lancer une analyse sur vos verbatims</h3>
+            <div class="steps-container">
+              <ol class="steps-list">
+                <li>Sur le tableau de données brutes, cliquez sur le bouton <strong>AI Feedback Insights</strong>.</li>
+                <li>Sélectionnez la campagne et la ou les questions ouvertes à analyser.</li>
+                <li>Appliquez des filtres pour définir un périmètre précis (segment, période, canal).</li>
+                <li>Lancez l'analyse en un seul clic, sans configuration complexe.</li>
+              </ol>
+              <div class="steps-callout">
+                <strong>À retenir :</strong><br>
+                L'analyse peut porter sur une seule campagne, mais plusieurs questions ouvertes à la fois.
+              </div>
+            </div>
+            <div class="project-links">
+              <a href="https://help.cxr.skeepers.com/hc/fr/articles/24934759788700" target="_blank">
+                <u>Consulter l'article sur AI Feedback Insights</u>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Décrypter les résultats -->
+        <div class="project-card fade-up">
+          <div class="icon-visual">
+            <div class="icon-visual-inner">
+              <div class="icon-visual-row">
+                <div class="icon-circle">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 11l4-4 3 3 5-6" stroke="#0073ff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="icon-circle">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.7L8 1z" stroke="#0073ff" stroke-width="1.2" stroke-linejoin="round"/></svg>
+                </div>
+              </div>
+              <span class="icon-visual-label">Points forts & axes d'amélioration</span>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-tags">
+              <span class="project-tag">Synthèse</span>
+              <span class="project-tag">Points forts</span>
+              <span class="project-tag">Irritants</span>
+            </div>
+            <h3 class="project-title">Décrypter les résultats de l'analyse</h3>
+            <div class="steps-container">
+              <ol class="steps-list">
+                <li>Consultez la synthèse globale pour comprendre rapidement les grandes tendances.</li>
+                <li>Identifiez les points forts de votre expérience client et pourquoi ils sont perçus positivement.</li>
+                <li>Repérez les axes d'amélioration et irritants récurrents mentionnés par vos clients.</li>
+              </ol>
+              <div class="steps-callout">
+                <strong>À retenir :</strong><br>
+                L'analyse repose uniquement sur le texte des verbatims — elle n'intègre pas les scores quantitatifs (NPS, CSAT, notes).
+              </div>
+            </div>
+            <div class="project-links">
+              <a href="https://help.cxr.skeepers.com/hc/fr/articles/24934759788700" target="_blank">
+                <u>Consulter l'article sur AI Feedback Insights</u>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Opportunités et réutilisation -->
+        <div class="project-card fade-up">
+          <div class="icon-visual">
+            <div class="icon-visual-inner">
+              <div class="icon-visual-row">
+                <div class="icon-circle">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="#0073ff" stroke-width="1.2"/><path d="M8 5v3l2 1" stroke="#0073ff" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </div>
+                <span class="icon-arrow">→</span>
+                <div class="icon-circle">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3h10M3 8h10M3 13h6" stroke="#0073ff" stroke-width="1.4" stroke-linecap="round"/></svg>
+                </div>
+              </div>
+              <span class="icon-visual-label">Opportunités → Rapports</span>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-tags">
+              <span class="project-tag">Opportunités</span>
+              <span class="project-tag">Validation humaine</span>
+              <span class="project-tag">Réutilisation</span>
+            </div>
+            <h3 class="project-title">Identifier et réutiliser vos opportunités</h3>
+            <div class="steps-container">
+              <ol class="steps-list">
+                <li>Consultez les opportunités d'amélioration globales suggérées par l'IA.</li>
+                <li>Validez ces recommandations avec votre expertise métier — elles nécessitent toujours une validation humaine.</li>
+                <li>Copiez-collez facilement les insights dans vos rapports, présentations ou plans d'action internes.</li>
+              </ol>
+            </div>
+            <div class="project-links">
+              <a href="https://help.cxr.skeepers.com/hc/fr/articles/24934759788700" target="_blank">
+                <u>Consulter l'article sur AI Feedback Insights</u>
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       RESSOURCES / ENVIE D'ESSAYER
+  ============================================================ -->
+  <section id="contact">
+    <div class="section-inner">
+      <div class="section-header">
+        <span class="section-label">04</span>
+        <h2 class="section-title">Envie d’essayer ?</h2>
+        <div class="section-line"></div>
+      </div>
+
+      <div class="contact-card fade-up">
+        <div class="contact-left">
+          <h3 class="contact-title">Passez à l’action 🚀</h3>
+          <p class="contact-sub">
+            Retrouvez toutes les ressources pour prendre en main AI Feedback Insights,
+            approfondir vos connaissances et appliquer les bonnes pratiques.
+          </p>
+
+          <!-- Inscription au Live Training -->
+          <a href="https://app.livestorm.co/skeepers-2/feedback-management-transformez-vos-verbatims-en-insights-actionnables-ai-feedback-insights"
+             target="_blank"
+             class="btn-primary">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 4l12 6-12 6V4z" fill="#0d0d0d"/>
+            </svg>
+            S’inscrire au Live Training
+          </a>
+        </div>
+
+        <div class="contact-right">
+
+          <!-- Help Center -->
+          <a href="https://help.cxr.skeepers.com/hc/fr/articles/24934759788700"
+             target="_blank"
+             class="contact-link">
+            <span class="contact-link-icon">
+              <svg viewBox="0 0 20 20">
+                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 12h-1v-1h2v1h-1zm1.07-3.75l-.9.92A1.5 1.5 0 009 12h1v-.25c0-.41.17-.79.44-1.06l1.24-1.26A2 2 0 0010 5a2 2 0 00-2 2h1a1 1 0 112 0c0 .28-.11.53-.29.71z"/>
+              </svg>
+            </span>
+            Article : AI Feedback Insights
+          </a>
+
+          <!-- Plateforme -->
+          <a href="https://room.cxr.skeepers.io/backend/home/"
+             target="_blank"
+             class="contact-link">
+            <span class="contact-link-icon">
+              <svg viewBox="0 0 20 20">
+                <path d="M3 3h6v6H3V3zm8 0h6v4h-6V3zM3 11h4v6H3v-6zm6 2h8v4H9v-4z"/>
+              </svg>
+            </span>
+            Accéder à la plateforme
+          </a>
+
+          <!-- Support Care -->
+          <a href="https://help.cxr.skeepers.com/hc/fr/articles/12709934628252"
+             target="_blank"
+             class="contact-link">
+            <span class="contact-link-icon">
+              <svg viewBox="0 0 20 20">
+                <path d="M7 9l2 2 4-4-1.5-1.5L9 8 8.5 7.5 7 9zm-2-6h10v2H5V3zm0 4h10v2H5V7zm0 4h6v2H5v-2z"/>
+              </svg>
+            </span>
+            Contacter l'équipe Care
+          </a>
+
+        </div>
+      </div>
+
+      <div class="footer-bar">
+        <span>© 2026 Skeepers — All rights reserved</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       JAVASCRIPT
+  ============================================================ -->
+  <script>
+    // ----- Nav mobile toggle -----
+    const navToggle = document.getElementById('navToggle');
+    const navLinks  = document.getElementById('navLinks');
+    navToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('open');
+    });
+    // Close menu on link click
+    navLinks.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => navLinks.classList.remove('open'));
+    });
+
+    // ----- Scroll-driven fade-up animations -----
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // ----- Active nav link highlight on scroll -----
+    const sections = document.querySelectorAll('section[id]');
+    const navAnchors = document.querySelectorAll('.nav-links a');
+
+    const scrollSpy = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navAnchors.forEach(a => {
+            a.style.color = a.getAttribute('href') === '#' + entry.target.id
+              ? 'var(--gold)'
+              : '';
+          });
+        }
+      });
+    }, { rootMargin: '-40% 0px -50% 0px' });
+
+    sections.forEach(s => scrollSpy.observe(s));
+  </script>
+
+</body>
+</html>
